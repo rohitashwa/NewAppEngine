@@ -12,14 +12,6 @@ JINJA_ENVIRONMENT = jinja2.Environment(
     loader=jinja2.FileSystemLoader(os.path.dirname(__file__)),
     extensions=['jinja2.ext.autoescape'])
 
-import cgi
-import urllib
-
-from google.appengine.api import users
-from google.appengine.ext import ndb
-
-import webapp2
-
 
 MAIN_PAGE_FOOTER_TEMPLATE = """\
     <form action="/sign?%s" method="post">
@@ -64,17 +56,9 @@ class MainPage(webapp2.RequestHandler):
     def get(self):
         guestbook_name = self.request.get('guestbook_name',
                                           DEFAULT_GUESTBOOK_NAME)
-
-        # Ancestor Queries, as shown here, are strongly consistent with the High
-        # Replication Datastore. Queries that span entity groups are eventually
-        # consistent. If we omitted the ancestor from this query there would be
-        # a slight chance that Greeting that had just been written would not
-        # show up in a query.
-
         greetings_query = Greeting.query(
             ancestor=guestbook_key(guestbook_name)).order(-Greeting.date)
         greetings = greetings_query.fetch(10)
-
 
         if users.get_current_user():
             url = users.create_logout_url(self.request.uri)
@@ -84,7 +68,7 @@ class MainPage(webapp2.RequestHandler):
             url_linktext = 'Login'
 
         template_values = {
-            'greetings':greetings,
+            'greetings': greetings,
             'guestbook_name': urllib.urlencode(guestbook_name),
             'url': url,
             'url_linktext': url_linktext,
